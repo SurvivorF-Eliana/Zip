@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>| Zearcher 🗃️</title>
+  <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/229836307?s=400&u=af2147593dc3ad183171b470e8daa410e53de744&v=4" />
+  <link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ===== PS STYLE GUIDE ===== */
+    :root {
+      --bg: #050506;
+      --panel: rgba(18, 18, 22, 0.9);
+      --border: #2a2a32;
+      --border-hl: #4a4a55;
+      --txt: #e2e2e5;
+      --dim: #70707a;
+      --accent: #d6ff00;
+      --alert: #ff003c;
+      --font: 'Host Grotesk', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      background-image: radial-gradient(circle at 50% 40%, #111116 0%, #000 100%);
+      color: var(--txt);
+      font-family: var(--font);
+      font-weight: 300;
+      font-size: 11px;
+      text-transform: uppercase;
+      min-height: 100vh;
+      padding: 1vw;
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--border-hl); border-radius: 2px; }
+
+    .wrap {
+      max-width: 1500px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.2fr 1.6fr;
+      gap: 10px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px 2px 14px 2px;
+      backdrop-filter: blur(10px);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+
+    .panel.full { grid-column: 1 / -1; }
+
+    /* header */
+    .header-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      color: var(--txt);
+    }
+
+    .badge {
+      background: var(--accent);
+      color: #000;
+      padding: 2px 8px;
+      font-size: 9px;
+      font-weight: 500;
+      border-radius: 3px 0 3px 0;
+      letter-spacing: 0.5px;
+    }
+
+    .readout {
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 3px;
+      background: rgba(0,0,0,.35);
+      color: var(--dim);
+      font-size: 9px;
+      font-family: var(--font);
+      text-transform: uppercase;
+    }
+
+    .readout.hl { color: var(--accent); border-color: var(--border-hl); }
+
+    /* buttons */
+    .btn {
+      background: rgba(0,0,0,.5);
+      border: 1px solid var(--border-hl);
+      color: var(--txt);
+      padding: 5px 11px;
+      font-family: var(--font);
+      font-size: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn.accent { background: var(--accent); color: #000; font-weight: 500; }
+    .btn.accent:hover:not(:disabled) { filter: brightness(1.08); color: #000; border-color: var(--accent); }
+    .btn.alert { border-color: var(--alert); color: var(--alert); }
+    .btn:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* file input fake */
+    .file-wrap {
+      position: relative;
+      display: inline-block;
+    }
+    .file-wrap input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    /* inputs */
+    input[type="text"] {
+      background: rgba(0,0,0,.4);
+      border: 1px solid var(--border);
+      color: var(--txt);
+      padding: 4px 8px;
+      font-family: var(--font);
+      font-size: 11px;
+      border-radius: 3px;
+      text-transform: none;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+    input[type="text"]:disabled { opacity: .5; }
+
+    /* tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--dim);
+      padding: 6px 12px;
+      font-family: var(--font);
+      font-size: 10px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: .15s;
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-btn:hover { color: var(--txt); }
+
+    /* item container */
+    .item-container {
+      max-height: 380px;
+      overflow: auto;
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-family: var(--font);
+      font-size: 11px;
+      text-transform: none;
+    }
+
+    .item-list { /* flat search results */ }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border-bottom: 1px solid #141418;
+      cursor: pointer;
+      transition: .1s;
+    }
+    .item-row:hover { background: rgba(255,255,255,.04); }
+    .item-row .path { color: #7ee787; font-weight: 400; }
+    .item-row .type { color: var(--dim); font-size: 9px; margin-left: auto; flex-shrink: 0; }
+    .item-row .emoji { font-size: 13px; line-height: 1; }
+
+    /* ===== TREE VERTICAL ===== */
+    .tree {
+      padding: 2px 0;
+    }
+    .tree .tree-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-bottom: 1px solid #0f0f12;
+      cursor: pointer;
+      transition: background .1s;
+      position: relative;
+    }
+    .tree .tree-item:hover {
+      background: rgba(255,255,255,.03);
+    }
+    .tree .tree-item .emoji {
+      font-size: 13px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .tree .tree-item .name {
+      flex: 1;
+      word-break: break-word;
+      text-transform: none;
+      color: #ddd;
+    }
+    .tree .tree-item .toggle {
+      font-size: 9px;
+      color: var(--dim);
+      cursor: pointer;
+      user-select: none;
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+      transition: .15s;
+    }
+    .tree .tree-item .toggle:hover {
+      color: var(--accent);
+    }
+    .tree .tree-item .path-hint {
+      color: var(--dim);
+      font-size: 8px;
+      flex-shrink: 0;
+      margin-left: 4px;
+    }
+    /* líneas verticales de jerarquía */
+    .tree .tree-item .line-indent {
+      display: inline-block;
+      width: 12px;
+      height: 1px;
+      border-top: 1px solid #2a2a32;
+      margin-right: 2px;
+      flex-shrink: 0;
+    }
+    .tree .tree-item .vline {
+      display: inline-block;
+      width: 2px;
+      height: 100%;
+      background: #2a2a32;
+      flex-shrink: 0;
+      margin-right: 4px;
+    }
+    /* profundidad se maneja con padding-left en cada item */
+    .tree .tree-item.depth-0 { padding-left: 8px; }
+    .tree .tree-item.depth-1 { padding-left: 22px; }
+    .tree .tree-item.depth-2 { padding-left: 36px; }
+    .tree .tree-item.depth-3 { padding-left: 50px; }
+    .tree .tree-item.depth-4 { padding-left: 64px; }
+    .tree .tree-item.depth-5 { padding-left: 78px; }
+    .tree .tree-item.depth-6 { padding-left: 92px; }
+    .tree .tree-item.depth-7 { padding-left: 106px; }
+    .tree .tree-item.depth-8 { padding-left: 120px; }
+    .tree .tree-item.depth-9 { padding-left: 134px; }
+    /* ocultar hijos cuando el padre está colapsado */
+    .tree .tree-item.hidden {
+      display: none !important;
+    }
+
+    .empty {
+      padding: 30px 10px;
+      text-align: center;
+      color: var(--dim);
+      letter-spacing: 1px;
+      font-size: 11px;
+    }
+
+    /* content viewer */
+    .content-header {
+      font-size: 11px;
+      color: var(--dim);
+      margin-bottom: 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .content-header .path { color: var(--accent); text-transform: none; }
+    .content-viewer {
+      font-family: monospace;
+      font-size: 12px;
+      background: #0d0d0d;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      max-height: 460px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.4;
+      color: #ddd;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .flex-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .flex-row .readout { margin: 0; }
+
+    /* responsive */
+    @media (max-width: 900px) {
+      .wrap { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- ===== HEADER ===== -->
+    <div class="panel full header-wrap">
+      <div class="brand">
+        <h1>📦 ZIP ZEARCHER</h1>
+        <span class="badge">V.03</span>
+      </div>
+      <div class="readout hl" id="statusReadout">\[ IDLE ]</div>
+    </div>
+
+    <!-- ===== COLUMNA IZQUIERDA ===== -->
+    <div>
+      <!-- Carga -->
+      <div class="panel">
+        <div class="flex-row">
+          <div class="file-wrap">
+            <button class="btn accent">⬆ INJECT ZIP</button>
+            <input type="file" id="zipInput" accept=".zip" />
+          </div>
+          <div class="readout" id="zipInfo">NINGUNO</div>
+        </div>
+        <div class="meta" style="color:var(--dim);font-size:9px;margin-top:4px;">
+          <span id="entryCount">0 entradas</span>
+        </div>
+      </div>
+
+      <!-- Búsqueda -->
+      <div class="panel">
+        <div class="flex-row">
+          <input type="text" id="searchInput" placeholder="🔍 buscar nombre..." disabled />
+          <div class="readout" id="stats">0 coincidencias</div>
+        </div>
+        <div class="controls">
+          <button class="btn" id="exportBtn" disabled>📥 EXPORTAR TXT</button>
+          <button class="btn alert" id="clearBtn">🗑 CLEAR ALL</button>
+        </div>
+      </div>
+
+      <!-- Resultados / Tree -->
+      <div class="panel">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="search">🔎 SEARCH</button>
+          <button class="tab-btn" data-tab="tree">📂 TREE</button>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;flex-wrap:wrap;">
+          <button class="btn" id="expandAllBtn" style="font-size:8px;padding:2px 8px;">EXPANDIR TODO</button>
+          <button class="btn" id="collapseAllBtn" style="font-size:8px;padding:2px 8px;">COLAPSAR TODO</button>
+        </div>
+        <div class="item-container" id="resultsContainer">
+          <div id="searchResults" class="item-list"></div>
+          <div id="treeResults" class="tree" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== COLUMNA DERECHA (contenido) ===== -->
+    <div class="panel" style="display:flex;flex-direction:column;">
+      <div class="content-header" id="contentHeader">
+        <span>📄</span>
+        <span class="path">ningún archivo seleccionado</span>
+      </div>
+      <div class="content-viewer" id="contentViewer">
+        <span class="empty">\[ HAZ CLICK EN UN ARCHIVO ]</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>
+    (function(){
+      "use strict";
+
+      // ===== DOM refs =====
+      const $ = id => document.getElementById(id);
+      const zipInput = $('zipInput');
+      const searchInput = $('searchInput');
+      const stats = $('stats');
+      const zipInfo = $('zipInfo');
+      const entryCount = $('entryCount');
+      const exportBtn = $('exportBtn');
+      const clearBtn = $('clearBtn');
+      const contentHeader = $('contentHeader');
+      const contentViewer = $('contentViewer');
+      const statusReadout = $('statusReadout');
+      const searchResults = $('searchResults');
+      const treeResults = $('treeResults');
+      const resultsContainer = $('resultsContainer');
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const expandAllBtn = $('expandAllBtn');
+      const collapseAllBtn = $('collapseAllBtn');
+
+      // ===== State =====
+      let zipInstance = null;
+      let allEntries = [];
+      let currentMatches = [];
+      let loadedZipName = '';
+      let currentTab = 'search';
+      let treeExpanded = {}; // objeto con key = path de carpeta, true/false
+
+      // ===== Helper =====
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function setStatus(text, highlight=false) {
+        statusReadout.textContent = text;
+        statusReadout.classList.toggle('hl', highlight);
+      }
+
+      function isTextFile(path) {
+        const lower = path.toLowerCase();
+        const exts = ['.txt','.csv','.xml','.json','.cfg','.ini','.map','.hpp','.c','.cs','.sqf','.log','.md','.yml','.yaml'];
+        return exts.some(ext => lower.endsWith(ext));
+      }
+
+      // ===== Render flat search results =====
+      function renderSearchMatches(matches) {
+        currentMatches = matches;
+        if (!matches.length) {
+          searchResults.innerHTML = `<div class="empty">\[ SIN COINCIDENCIAS ]</div>`;
+          stats.textContent = '0 coincidencias';
+          exportBtn.disabled = true;
+          return;
+        }
+
+        const html = matches.map(m => {
+          const emoji = m.type === 'carpeta' ? '📁' : '📄';
+          const typeLabel = m.type === 'carpeta' ? 'CARPETA' : 'ARCHIVO';
+          return `
+            <div class="item-row" data-path="${escapeHtml(m.path)}" data-type="${m.type}">
+              <span class="emoji">${emoji}</span>
+              <span class="path">${escapeHtml(m.path)}</span>
+              <span class="type">${typeLabel}</span>
+            </div>
+          `;
+        }).join('');
+
+        searchResults.innerHTML = html;
+        stats.textContent = `${matches.length} coincidencias de ${allEntries.length} entradas`;
+        exportBtn.disabled = false;
+      }
+
+      // ===== Build tree (jerárquico) =====
+      function buildTree(entries) {
+        const root = { name: '', children: [], isDir: true, path: '' };
+        entries.forEach(entry => {
+          const parts = entry.path.split('/').filter(Boolean);
+          let current = root;
+          parts.forEach((part, idx) => {
+            const isLast = idx === parts.length - 1;
+            const isDir = isLast ? entry.type === 'carpeta' : true;
+            let child = current.children.find(c => c.name === part);
+            if (!child) {
+              child = {
+                name: part,
+                children: [],
+                isDir: isDir,
+                path: entry.path,
+                fullPath: entry.path
+              };
+              current.children.push(child);
+            }
+            current = child;
+          });
+        });
+        // ordenar: carpetas primero, luego archivos
+        function sortChildren(node) {
+          node.children.sort((a,b) => {
+            if (a.isDir && !b.isDir) return -1;
+            if (!a.isDir && b.isDir) return 1;
+            return a.name.localeCompare(b.name);
+          });
+          node.children.forEach(sortChildren);
+        }
+        sortChildren(root);
+        return root;
+      }
+
+      // ===== Render árbol como lista plana vertical =====
+      function renderTreeFlat(node, depth=0, parentPath='') {
+        let items = [];
+        node.children.forEach(child => {
+          const currentPath = child.fullPath || (parentPath ? parentPath + '/' + child.name : child.name);
+          const item = {
+            name: child.name,
+            path: currentPath,
+            isDir: child.isDir,
+            depth: depth,
+            children: child.children,
+            fullPath: currentPath
+          };
+          items.push(item);
+          if (child.isDir && child.children.length > 0) {
+            // Solo si está expandido, añadir hijos
+            const expanded = treeExpanded[currentPath] !== undefined ? treeExpanded[currentPath] : true;
+            if (expanded) {
+              items = items.concat(renderTreeFlat(child, depth+1, currentPath));
+            }
+          }
+        });
+        return items;
+      }
+
+      function renderFullTree() {
+        if (!allEntries.length) {
+          treeResults.innerHTML = `<div class="empty">\[ ZIP VACÍO O NO CARGADO ]</div>`;
+          return;
+        }
+        const root = buildTree(allEntries);
+        // Inicializar estado de expansión para todas las carpetas (por defecto expandidas)
+        function initExpanded(node) {
+          node.children.forEach(child => {
+            if (child.isDir) {
+              const path = child.fullPath || child.name;
+              if (treeExpanded[path] === undefined) {
+                treeExpanded[path] = true;
+              }
+              initExpanded(child);
+            }
+          });
+        }
+        initExpanded(root);
+        // Obtener lista plana
+        const flat = renderTreeFlat(root, 0, '');
+        if (!flat.length) {
+          treeResults.innerHTML = `<div class="empty">\[ SIN ELEMENTOS ]</div>`;
+          return;
+        }
+
+        let html = '';
+        flat.forEach(item => {
+          const emoji = item.isDir ? '📁' : '📄';
+          const toggle = item.isDir ? `<span class="toggle" data-path="${escapeHtml(item.fullPath)}">${treeExpanded[item.fullPath] ? '▼' : '▶'}</span>` : `<span class="toggle" style="visibility:hidden;">•</span>`;
+          const depthClass = `depth-${Math.min(item.depth, 9)}`;
+          const hint = item.isDir && item.children ? `(${item.children.length})` : '';
+          html += `
+            <div class="tree-item ${depthClass}" data-path="${escapeHtml(item.fullPath)}" data-type="${item.isDir ? 'carpeta' : 'archivo'}">
+              ${toggle}
+              <span class="emoji">${emoji}</span>
+              <span class="name">${escapeHtml(item.name)}</span>
+              ${hint ? `<span class="path-hint">${hint}</span>` : ''}
+            </div>
+          `;
+        });
+        treeResults.innerHTML = html;
+
+        // Eventos de toggle
+        treeResults.querySelectorAll('.tree-item .toggle[data-path]').forEach(el => {
+          el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const path = this.dataset.path;
+            if (path) {
+              treeExpanded[path] = !treeExpanded[path];
+              renderFullTree(); // re-renderizar
+            }
+          });
+        });
+
+        // Clic en el item para ver contenido (si es archivo) o toggle (si es carpeta)
+        treeResults.querySelectorAll('.tree-item').forEach(el => {
+          el.addEventListener('click', function(e) {
+            if (e.target.closest('.toggle')) return;
+            const path = this.dataset.path;
+            const type = this.dataset.type;
+            if (!path) return;
+            if (type === 'carpeta') {
+              // toggle
+              if (treeExpanded[path] !== undefined) {
+                treeExpanded[path] = !treeExpanded[path];
+                renderFullTree();
+              }
+            } else {
+              showFileContent(path);
+            }
+          });
+        });
+      }
+
+      // ===== Mostrar contenido =====
+      async function showFileContent(path) {
+        if (!zipInstance) return;
+        contentHeader.innerHTML = `<span>📄</span><span class="path">${escapeHtml(path)}</span>`;
+        contentViewer.innerHTML = '<span class="empty">\[ LEYENDO... ]</span>';
+
+        try {
+          const file = zipInstance.file(path);
+          if (!file) {
+            contentViewer.innerHTML = '<span class="empty">\[ ARCHIVO NO ENCONTRADO ]</span>';
+            return;
+          }
+          const text = await file.async('string');
+          contentViewer.textContent = text;
+        } catch (err) {
+          console.error(err);
+          contentViewer.innerHTML = '<span class="empty">\[ ERROR AL LEER ]</span>';
+        }
+      }
+
+      // ===== Búsqueda =====
+      function searchEntries(query) {
+        const q = query.trim().toLowerCase();
+        if (!q) {
+          searchResults.innerHTML = `<div class="empty">\[ ESCRIBE PARA BUSCAR ]</div>`;
+          stats.textContent = `${allEntries.length} entradas cargadas`;
+          exportBtn.disabled = true;
+          currentMatches = [];
+          return;
+        }
+
+        const parts = q.split(/\s+/).filter(Boolean);
+        const matches = allEntries.filter(entry => {
+          const target = entry.path.toLowerCase();
+          return parts.every(p => target.includes(p));
+        });
+        renderSearchMatches(matches);
+      }
+
+      // ===== Cargar ZIP =====
+      async function loadZip(file) {
+        if (!file) return;
+        loadedZipName = file.name;
+        zipInfo.textContent = 'CARGANDO...';
+        setStatus('\[ CARGANDO ]');
+        searchInput.disabled = true;
+        exportBtn.disabled = true;
+        searchResults.innerHTML = '';
+        treeResults.innerHTML = '';
+        contentViewer.innerHTML = '<span class="empty">\[ ESPERANDO ]</span>';
+
+        try {
+          zipInstance = await JSZip.loadAsync(file);
+          allEntries = [];
+          zipInstance.forEach((relativePath, zipEntry) => {
+            allEntries.push({
+              path: relativePath,
+              type: zipEntry.dir ? 'carpeta' : 'archivo',
+              dir: zipEntry.dir
+            });
+          });
+          allEntries.sort((a,b) => a.path.localeCompare(b.path));
+
+          zipInfo.textContent = `📦 ${file.name}`;
+          entryCount.textContent = `${allEntries.length} entradas`;
+          setStatus(`\[ LOADED ${allEntries.length} ]`, true);
+          searchInput.disabled = false;
+          searchInput.value = '';
+          searchInput.focus();
+
+          searchResults.innerHTML = `<div class="empty">\[ ESCRIBE PARA BUSCAR ]</div>`;
+          stats.textContent = `${allEntries.length} entradas cargadas`;
+          currentMatches = [];
+
+          // Reiniciar estado de expansión
+          treeExpanded = {};
+          renderFullTree();
+
+          switchTab('search');
+
+        } catch (err) {
+          console.error(err);
+          zipInstance = null;
+          allEntries = [];
+          zipInfo.textContent = '⚠ ERROR';
+          setStatus('\[ ERROR ]', false);
+          searchInput.disabled = true;
+          searchResults.innerHTML = '<div class="empty">\[ ZIP INVÁLIDO ]</div>';
+          treeResults.innerHTML = '';
+          entryCount.textContent = '0 entradas';
+          stats.textContent = '0 coincidencias';
+          exportBtn.disabled = true;
+        }
+      }
+
+      // ===== Switch tabs =====
+      function switchTab(tab) {
+        currentTab = tab;
+        tabBtns.forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.tab === tab);
+        });
+        if (tab === 'search') {
+          searchResults.style.display = '';
+          treeResults.style.display = 'none';
+          const q = searchInput.value.trim();
+          if (q) searchEntries(q);
+          else {
+            searchResults.innerHTML = `<div class="empty">\[ ESCRIBE PARA BUSCAR ]</div>`;
+            stats.textContent = `${allEntries.length} entradas cargadas`;
+            exportBtn.disabled = true;
+            currentMatches = [];
+          }
+        } else {
+          searchResults.style.display = 'none';
+          treeResults.style.display = '';
+          renderFullTree();
+          stats.textContent = `${allEntries.length} entradas · vista árbol`;
+          exportBtn.disabled = true;
+        }
+      }
+
+      // ===== Expandir / colapsar todo =====
+      function expandAll() {
+        // poner todas las carpetas a true
+        function setAll(node, val) {
+          node.children.forEach(child => {
+            if (child.isDir) {
+              const path = child.fullPath || child.name;
+              treeExpanded[path] = val;
+              setAll(child, val);
+            }
+          });
+        }
+        if (allEntries.length) {
+          const root = buildTree(allEntries);
+          setAll(root, true);
+          renderFullTree();
+        }
+      }
+
+      function collapseAll() {
+        function setAll(node, val) {
+          node.children.forEach(child => {
+            if (child.isDir) {
+              const path = child.fullPath || child.name;
+              treeExpanded[path] = val;
+              setAll(child, val);
+            }
+          });
+        }
+        if (allEntries.length) {
+          const root = buildTree(allEntries);
+          setAll(root, false);
+          renderFullTree();
+        }
+      }
+
+      // ===== Event listeners =====
+      zipInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) await loadZip(file);
+        e.target.value = '';
+      });
+
+      searchInput.addEventListener('input', (e) => {
+        if (currentTab === 'search') {
+          searchEntries(e.target.value);
+        }
+      });
+
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchTab(btn.dataset.tab);
+        });
+      });
+
+      searchResults.addEventListener('click', (e) => {
+        const row = e.target.closest('.item-row');
+        if (!row) return;
+        const path = row.dataset.path;
+        if (path && row.dataset.type !== 'carpeta') {
+          showFileContent(path);
+        } else if (path) {
+          contentViewer.innerHTML = '<span class="empty">\[ CARPETA — SIN CONTENIDO ]</span>';
+        }
+      });
+
+      exportBtn.addEventListener('click', () => {
+        if (!currentMatches.length) return;
+        const text = currentMatches.map(m => `${m.type.toUpperCase()}: ${m.path}`).join('\n');
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${loadedZipName.replace(/\.zip$/i, '')}_results.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      clearBtn.addEventListener('click', () => {
+        zipInput.value = '';
+        searchInput.value = '';
+        searchInput.disabled = true;
+        allEntries = [];
+        currentMatches = [];
+        zipInstance = null;
+        loadedZipName = '';
+        zipInfo.textContent = 'NINGUNO';
+        entryCount.textContent = '0 entradas';
+        stats.textContent = '0 coincidencias';
+        exportBtn.disabled = true;
+        searchResults.innerHTML = `<div class="empty">\[ SIN ZIP ]</div>`;
+        treeResults.innerHTML = '';
+        treeExpanded = {};
+        contentHeader.innerHTML = `<span>📄</span><span class="path">ningún archivo</span>`;
+        contentViewer.innerHTML = `<span class="empty">\[ SIN DATOS ]</span>`;
+        setStatus('\[ IDLE ]', false);
+        switchTab('search');
+      });
+
+      expandAllBtn.addEventListener('click', expandAll);
+      collapseAllBtn.addEventListener('click', collapseAll);
+
+      // Inicializar
+      setStatus('\[ IDLE ]', false);
+      searchResults.innerHTML = `<div class="empty">\[ CARGÁ UN ZIP ]</div>`;
+      stats.textContent = '0 coincidencias';
+      exportBtn.disabled = true;
+      switchTab('search');
+    })();
+  </script>
+</body>
+</html>
