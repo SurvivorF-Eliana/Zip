@@ -48,6 +48,23 @@
     align-items: stretch;
     gap: 10px;
 }
+.left-column {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.left-column > .panel:last-child {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+#resultsContainer {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow: auto;
+}
 
     .panel {
       background: var(--panel);
@@ -350,6 +367,15 @@
         min-height: 100vh;
         grid-template-columns: 1fr;
         grid-template-rows: auto;
+      }
+      .left-column > .panel:last-child {
+        flex: 0 0 auto;
+        min-height: 420px;
+      }
+      #resultsContainer {
+        flex: 0 0 auto;
+        min-height: 320px;
+        max-height: 60vh;
       }
       .content-viewer {
         flex: 0 0 auto;
@@ -656,8 +682,33 @@
             contentViewer.innerHTML = '<span class="empty">\[ ARCHIVO NO ENCONTRADO ]</span>';
             return;
           }
-          const text = await file.async('string');
-          contentViewer.textContent = text;
+          const bytes = await file.async('uint8array');
+          const byteLength = bytes.byteLength;
+          const decoder = new TextDecoder('utf-8', { fatal: true });
+          let text = null;
+
+          try {
+            text = decoder.decode(bytes);
+          } catch (_) {
+            text = null;
+          }
+
+          // Null bytes are a strong signal that this is binary data, not source text.
+          const hasNullBytes = bytes.subarray(0, Math.min(byteLength, 8192)).includes(0);
+          if (text !== null && !hasNullBytes) {
+            contentViewer.textContent = text || '[ ARCHIVO VACÍO ]';
+          } else {
+            const previewLength = Math.min(byteLength, 512);
+            const hex = Array.from(bytes.subarray(0, previewLength))
+              .map((value, index) => {
+                const prefix = index % 16 === 0 ? '\\n' + index.toString(16).padStart(8, '0') + '  ' : '';
+                return prefix + value.toString(16).padStart(2, '0') + ' ';
+              }).join('');
+            contentViewer.textContent =
+              '[ ARCHIVO BINARIO · ' + byteLength.toLocaleString() + ' BYTES ]\\n' +
+              '[ VISTA HEXADECIMAL · PRIMEROS ' + previewLength + ' BYTES ]\\n' + hex +
+              (byteLength > previewLength ? '\\n\\n[ VISTA PARCIAL ]' : '');
+          }
         } catch (err) {
           console.error(err);
           contentViewer.innerHTML = '<span class="empty">\[ ERROR AL LEER ]</span>';
